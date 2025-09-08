@@ -2,8 +2,7 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
+
 @router.get("/health")
 async def health():
-  return "Tutto bene!"
-
-
+    return "Tutto bene!"
