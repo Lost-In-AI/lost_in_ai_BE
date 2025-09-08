@@ -1,4 +1,14 @@
-venv
-.env
-.env.*
-!.env.example
+# --- IDE ---
+.idea/
+.vscode/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# --- Virtual env ---
+venv/
+.env/
