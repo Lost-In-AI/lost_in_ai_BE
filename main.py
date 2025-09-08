@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 import uvicorn
 from api.api_router import router
+from core.configs import settings
 
-app = FastAPI()
+app = FastAPI(title = settings.APP_NAME)
+
 app.include_router(router)
 
 if __name__ == "__main__":
