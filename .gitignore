@@ -1,10 +1,7 @@
-# --- PyCharm / JetBrains ---
+# --- IDE ---
 .idea/
-
-# --- VS Code ---
 .vscode/
 
-# --- Python generici ---
 __pycache__/
 *.pyc
 *.pyo
