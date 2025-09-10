@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+from schemas.message import Message
+
 
 class ChatRequest(BaseModel):
     session_id: str = Field(
@@ -11,7 +13,7 @@ class ChatRequest(BaseModel):
         ...,
         description="The latest user message to be processed by the AI chatbot"
     )
-    history: Optional[list[str]] = Field(
+    history: Optional[list[Message]] = Field(
         default=None,
         description="Optional list of the most recent N messages in the conversation"
     )
@@ -25,8 +27,30 @@ class ChatRequest(BaseModel):
             "examples": [
                 {
                     "session_id": "12345ABC",
-                    "current_message": "Ciao voglio informazioni per un mutuo"
-                }
+                    "current_message": "La casa cost 100k ed è grande 100 metri quadri. Mi potete concedere il mutuo?"
+                },
+                {
+                    "session_id": "12345ABC",
+                    "current_message": "Ciao voglio informazioni per un mutuo",
+                    "history": [
+                        {
+                            "sender": "user",
+                            "text": "Ciao voglio informazioni per un mutuo",
+                            "timestamp": "2025-09-05T15:02:00Z",
+                        },
+                        {
+                            "sender": "bot",
+                            "text": "L'agente umano è occupato al momento. Posso aiutarle con qualcosa di diverso?",
+                            "timestamp": "2025-09-05T15:02:00Z",
+                        },
+                        {
+                            "sender": "user",
+                            "text": "Ciao voglio informazioni per un mutuo",
+                            "currentMessage": "C'è un modo per essere messo in contatto con qualcuno?",
+                            "summary": "L'utente ha chiesto di essere messo in contatto con qualcuno."
+                        }
+                    ]
+                },
             ]
         }
     }
