@@ -1,0 +1,19 @@
+{
+  "env": {
+    "PYTHONPATH": "app"
+  },
+  "builds": [
+    {
+      "src": "app/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.12",
+        "maxLambdaSize": "50mb",
+        "installCommand": "pip install -r requirements.txt"
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "app/main.py" }
+  ]
+}
