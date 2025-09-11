@@ -13,7 +13,20 @@ class ChatController:
         self.openai_service = openai_service
 
     def new_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
-        return None
+        current_message = chat_request.current_message
+
+        response = self.openai_service.generate_response(current_message)
+
+        history = self.prepare_history(current_message, response.output_text, chat_request.history)
+
+        return ChatResponse(
+            response_code=status.HTTP_200_OK,
+            session_id=chat_request.session_id,
+            history=history,
+            summary=None,
+            current_response=history[-1]
+        )
+
 
     def handle_test_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
@@ -43,3 +56,24 @@ class ChatController:
             summary="L'utente ha chiesto di essere messo in contatto con qualcuno.",
             current_response=current_response
         )
+
+    @staticmethod
+    def prepare_history(current_message, current_response, history: list[Message] = None):
+        user_message = Message(
+            sender=MessageSender.USER,
+            text=current_message,
+            timestamp=datetime.now()
+        )
+
+        current_response = Message(
+            sender=MessageSender.BOT,
+            text=current_response,
+            timestamp=datetime.now()
+        )
+        if not history:
+            history = []
+
+        history.append(user_message)
+        history.append(current_response)
+
+        return history
