@@ -1,14 +1,20 @@
-from datetime import datetime
-
 from fastapi import status
+from datetime import datetime
 
 from models.enums.message_sender import MessageSender
 from schemas.chat_request import ChatRequest
 from schemas.chat_response import ChatResponse
 from schemas.message import Message
+from services.openai_service import OpenAIService
 
 
 class ChatController:
+    def __init__(self, openai_service: OpenAIService):
+        self.openai_service = openai_service
+
+    def new_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
+        return None
+
     def handle_test_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
             sender=MessageSender.BOT,
