@@ -6,27 +6,64 @@ from schemas.chat_request import ChatRequest
 from schemas.chat_response import ChatResponse
 from schemas.message import Message
 from services.openai_service import OpenAIService
+from services import prompt_builders, prompts
 
 
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
+        self.HISTORY_LIMIT = 5
+        self.bot_init = prompts.CHATBOT_INIT
 
     def new_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
         current_message = chat_request.current_message
+        user_message = self.get_message_from_request_message('user', current_message)
 
-        response = self.openai_service.generate_response(current_message)
+        summary = chat_request.summary if chat_request.summary else ""
+        history = chat_request.history if chat_request.history else []
+        prompt = prompt_builders.prepare_prompt(self.bot_init, current_message, history, summary)
 
-        history = self.prepare_history(current_message, response.output_text, chat_request.history)
+        response = self.openai_service.generate_response(prompt)
+
+        current_response = response.output[0].content[0].text
+        current_response_message = self.get_message_from_request_message('assistant', current_response)
+
+        history.append(user_message)
+        history.append(current_response_message)
+
+        if len(history) >= self.HISTORY_LIMIT:
+            history = history[-self.HISTORY_LIMIT:]
 
         return ChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=chat_request.session_id,
             history=history,
-            summary=None,
+            summary=summary if summary else None,
             current_response=history[-1]
         )
 
+    @staticmethod
+    def get_message_from_request_message(role: str, message: str, timestamp: datetime = None) -> Message:
+        if role == "user":
+            role = MessageSender.USER
+        elif role == "assistant":
+            role = MessageSender.ASSISTANT
+        else:
+            role = MessageSender.SYSTEM
+
+        return Message(
+            sender=role,
+            text=message,
+            timestamp=datetime.now() if not timestamp else timestamp
+        )
+
+    # TODO
+    def handle_summary(self, history: list[Message], summary: str = None) -> str:
+        history_message = [{sender, message} for sender, message in history]
+        summary_prompt = self.openai_service.summary_builder(history_message, summary)
+        response = self.openai_service.generate_response(prompt=summary_prompt)
+
+        return response.output_text
 
     def handle_test_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
@@ -56,24 +93,3 @@ class ChatController:
             summary="L'utente ha chiesto di essere messo in contatto con qualcuno.",
             current_response=current_response
         )
-
-    @staticmethod
-    def prepare_history(current_message, current_response, history: list[Message] = None):
-        user_message = Message(
-            sender=MessageSender.USER,
-            text=current_message,
-            timestamp=datetime.now()
-        )
-
-        current_response = Message(
-            sender=MessageSender.BOT,
-            text=current_response,
-            timestamp=datetime.now()
-        )
-        if not history:
-            history = []
-
-        history.append(user_message)
-        history.append(current_response)
-
-        return history
