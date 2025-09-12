@@ -27,6 +27,10 @@ class ChatResponse(BaseModel):
         default=None,
         description="Optional condensed summary of the conversation, used to preserve context and reduce token usage"
     )
+    music: Optional[bool] = Field(
+        default=False,
+        description="Whether or not the conversation is currently playing"
+    )
     message: Optional[str] = Field(
         default=None,
         description="Optional response message"
@@ -66,7 +70,8 @@ class ChatResponse(BaseModel):
                                     "stato energetico e soprattutto quanti soldi vuoi da noi!!",
                             "timestamp": "2025-09-05T15:07:00Z"
                         }
-                    ]
+                    ],
+                    "music": False
                 }
             ]
         }
