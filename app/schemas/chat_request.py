@@ -12,7 +12,8 @@ class ChatRequest(BaseModel):
     )
     current_message: str = Field(
         ...,
-        description="The latest user message to be processed by the AI chatbot"
+        description="The latest user message to be processed by the AI chatbot",
+        max_length=1000
     )
     history: Optional[list[Message]] = Field(
         default=None,
