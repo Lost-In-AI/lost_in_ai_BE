@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional
-from models.enums.message_sender import MessageSender
+from schemas.enums.message_sender import MessageSender
 from schemas.message import Message
 
 

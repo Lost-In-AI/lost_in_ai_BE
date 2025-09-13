@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from models.enums.message_sender import MessageSender
+from schemas.enums.message_sender import MessageSender
 
 
 class Message(BaseModel):

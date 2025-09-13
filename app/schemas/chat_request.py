@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+from schemas.enums.bot_personality import BotPersonality
 from schemas.message import Message
 
 
@@ -20,6 +21,10 @@ class ChatRequest(BaseModel):
     summary: Optional[str] = Field(
         default=None,
         description="Optional condensed summary of the conversation, used to preserve context and reduce token usage"
+    )
+    bot_personality: Optional[BotPersonality] = Field(
+        default=BotPersonality.WITTY,
+        description="The bot's personality"
     )
 
     model_config = {
