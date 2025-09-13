@@ -9,12 +9,13 @@ from schemas.chat_response import ChatResponse
 from schemas.message import Message
 from services.openai_service import OpenAIService
 from services import prompt_builders, prompts
+from core.configs import settings
 
 
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
-        self.HISTORY_LIMIT = 5
+        self.MAX_TOKENS = settings.MAX_TOKENS
         self.bot_init = prompts.CHATBOT_INIT
 
     def new_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
@@ -28,14 +29,15 @@ class ChatController:
 
         response = self.openai_service.generate_response(prompt)
 
+
         current_response = response.output[0].content[0].text
         current_response_message = self.get_message_from_request_message('assistant', current_response)
 
         history.append(user_message)
         history.append(current_response_message)
 
-        if len(history) >= self.HISTORY_LIMIT:
-            history = history[-self.HISTORY_LIMIT:]
+        if response.usage.input_tokens + response.usage.output_tokens >= self.MAX_TOKENS:
+            history.pop(0)
 
         return ChatResponse(
             response_code=status.HTTP_200_OK,
