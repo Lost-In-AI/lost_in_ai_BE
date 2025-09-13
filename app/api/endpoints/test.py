@@ -12,4 +12,4 @@ router = APIRouter()
 @router.post('/chat', response_model=ChatResponse)
 async def test_chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller)
                     ) -> ChatResponse:
-    return chat_controller.handle_test_chatbot(request)
+    return chat_controller.mock_response(request)

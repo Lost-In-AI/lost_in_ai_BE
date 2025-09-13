@@ -12,4 +12,4 @@ router = APIRouter()
 @router.post('/', response_model=ChatResponse, response_model_exclude_none=True)
 async def test_chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller)
                     ) -> ChatResponse:
-    return chat_controller.new_chatbot(request)
+    return chat_controller.process_chat(request)
