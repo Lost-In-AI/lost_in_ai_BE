@@ -54,7 +54,8 @@ class ChatRequest(BaseModel):
                             "currentMessage": "C'è un modo per essere messo in contatto con qualcuno?",
                             "summary": "L'utente ha chiesto di essere messo in contatto con qualcuno."
                         }
-                    ]
+                    ],
+                    "chat_personality": "witty"
                 },
             ]
         }
