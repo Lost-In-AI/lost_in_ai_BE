@@ -1,7 +1,9 @@
 from fastapi import status
 from datetime import datetime
+import random
 
-from models.enums.message_sender import MessageSender
+from schemas.enums.bot_personality import BotPersonality
+from schemas.enums.message_sender import MessageSender
 from schemas.chat_request import ChatRequest
 from schemas.chat_response import ChatResponse
 from schemas.message import Message
@@ -18,6 +20,7 @@ class ChatController:
     def new_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
         current_message = chat_request.current_message
         user_message = self.get_message_from_request_message('user', current_message)
+        bot_personality = self.get_bot_personality(chat_request.bot_personality)
 
         summary = chat_request.summary if chat_request.summary else ""
         history = chat_request.history if chat_request.history else []
@@ -39,7 +42,8 @@ class ChatController:
             session_id=chat_request.session_id,
             history=history,
             summary=summary if summary else None,
-            current_response=history[-1]
+            current_responses=[current_response_message],
+            bot_personality=bot_personality
         )
 
     @staticmethod
@@ -93,3 +97,10 @@ class ChatController:
             summary="L'utente ha chiesto di essere messo in contatto con qualcuno.",
             current_response=current_response
         )
+
+    @staticmethod
+    def get_bot_personality(bot_personality: BotPersonality = None) -> BotPersonality:
+        if bot_personality is None:
+            return random.choice(list(BotPersonality))
+
+        return bot_personality.value
