@@ -1,6 +1,7 @@
 from fastapi import status
 from datetime import datetime
 import random
+import json
 
 from schemas.enums.bot_personality import BotPersonality
 from schemas.enums.message_sender import MessageSender
@@ -15,41 +16,42 @@ from core.configs import settings
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
-        self.MAX_TOKENS = settings.MAX_TOKENS
         self.bot_init = prompts.CHATBOT_INIT
 
-    def new_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
-        current_message = chat_request.current_message
-        user_message = self.get_message_from_request_message('user', current_message)
-        bot_personality = self.get_bot_personality(chat_request.bot_personality)
+    def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
+        user_input_message = chat_request.current_message
+        user_message = self._to_message('user', user_input_message)
+        bot_personality = self._resolve_bot_personality(chat_request.bot_personality)
 
         summary = chat_request.summary if chat_request.summary else ""
         history = chat_request.history if chat_request.history else []
-        prompt = prompt_builders.prepare_prompt(self.bot_init, current_message, history, summary)
+        prompt = prompt_builders.prepare_prompt(self.bot_init, user_input_message, history, summary)
 
-        response = self.openai_service.generate_response(prompt)
+        openai_response = self.openai_service.generate_response(prompt)
 
+        parsed_output = json.loads(openai_response.output[0].content[0].text)
+        bot_reply = parsed_output['reply']
+        summary = parsed_output['summary']
 
-        current_response = response.output[0].content[0].text
-        current_response_message = self.get_message_from_request_message('assistant', current_response)
+        bot_message = self._to_message('assistant', bot_reply)
 
         history.append(user_message)
-        history.append(current_response_message)
+        history.append(bot_message)
 
-        if response.usage.input_tokens + response.usage.output_tokens >= self.MAX_TOKENS:
+        if openai_response.usage.input_tokens + openai_response.usage.output_tokens >= settings.MAX_TOKENS:
             history.pop(0)
 
         return ChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=chat_request.session_id,
             history=history,
-            summary=summary if summary else None,
-            current_responses=[current_response_message],
+            summary=summary,
+            current_responses=[bot_message],
             bot_personality=bot_personality
         )
 
     @staticmethod
-    def get_message_from_request_message(role: str, message: str, timestamp: datetime = None) -> Message:
+    def _to_message(role: str, message: str, timestamp: datetime = None) -> Message:
         if role == "user":
             role = MessageSender.USER
         elif role == "assistant":
@@ -63,15 +65,7 @@ class ChatController:
             timestamp=datetime.now() if not timestamp else timestamp
         )
 
-    # TODO
-    def handle_summary(self, history: list[Message], summary: str = None) -> str:
-        history_message = [{sender, message} for sender, message in history]
-        summary_prompt = self.openai_service.summary_builder(history_message, summary)
-        response = self.openai_service.generate_response(prompt=summary_prompt)
-
-        return response.output_text
-
-    def handle_test_chatbot(self, chat_request: ChatRequest) -> ChatResponse:
+    def mock_response(self, chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
             sender=MessageSender.BOT,
             text='Risposta di test... chatbot in pausa pranzo!!!',
@@ -101,7 +95,7 @@ class ChatController:
         )
 
     @staticmethod
-    def get_bot_personality(bot_personality: BotPersonality = None) -> BotPersonality:
+    def _resolve_bot_personality(bot_personality: BotPersonality = None) -> BotPersonality:
         if bot_personality is None:
             return random.choice(list(BotPersonality))
 

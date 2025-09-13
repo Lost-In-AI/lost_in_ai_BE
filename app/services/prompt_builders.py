@@ -13,7 +13,8 @@ def prepare_prompt(
     messages: List[Dict] = [prepare_message(MessageSender.SYSTEM, init_text.strip())]
 
     if summary_text:
-        messages.append(prepare_message(MessageSender.ASSISTANT, summary_text.strip()))
+        summary = f"PREVIOUS_SUMMARY:\n{summary_text.strip()}"
+        messages.append(prepare_message(MessageSender.SYSTEM, summary))
 
     if history_messages:
         for message in history_messages:
