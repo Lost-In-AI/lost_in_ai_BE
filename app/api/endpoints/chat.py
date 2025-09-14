@@ -9,7 +9,7 @@ from schemas.chat_response import ChatResponse
 router = APIRouter()
 
 
-@router.post('/chat', response_model=ChatResponse)
+@router.post('/', response_model=ChatResponse, response_model_exclude_none=True)
 async def test_chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller)
                     ) -> ChatResponse:
-    return chat_controller.mock_response(request)
+    return chat_controller.process_chat(request)

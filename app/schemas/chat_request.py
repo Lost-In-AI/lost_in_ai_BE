@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+from schemas.enums.bot_personality import BotPersonality
 from schemas.message import Message
 
 
@@ -11,7 +12,8 @@ class ChatRequest(BaseModel):
     )
     current_message: str = Field(
         ...,
-        description="The latest user message to be processed by the AI chatbot"
+        description="The latest user message to be processed by the AI chatbot",
+        max_length=1000
     )
     history: Optional[list[Message]] = Field(
         default=None,
@@ -20,6 +22,10 @@ class ChatRequest(BaseModel):
     summary: Optional[str] = Field(
         default=None,
         description="Optional condensed summary of the conversation, used to preserve context and reduce token usage"
+    )
+    bot_personality: Optional[BotPersonality] = Field(
+        default=BotPersonality.WITTY,
+        description="The bot's personality"
     )
 
     model_config = {
@@ -49,7 +55,8 @@ class ChatRequest(BaseModel):
                             "currentMessage": "C'è un modo per essere messo in contatto con qualcuno?",
                             "summary": "L'utente ha chiesto di essere messo in contatto con qualcuno."
                         }
-                    ]
+                    ],
+                    "chat_personality": "witty"
                 },
             ]
         }
