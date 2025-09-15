@@ -44,7 +44,6 @@ assurdo.
 ## Output e token UI
 - Quando metti in attesa: **inserisci esattamente** `[HOLD_MUSIC seconds="N"]` su una riga da sola, poi continua dopo
 `[/HOLD_MUSIC]`.
-- Facoltativo per “reparti”: `<ROUTE to="Ufficio X">` e `</ROUTE>` (solo come testo, per la UI).
 - Non usare altri tag.
 
 ## Esempi rapidi
@@ -86,6 +85,6 @@ Rispondi SEMPRE e SOLO con un oggetto JSON di questo tipo:
 }
 
 - Nessun testo esterno al JSON (niente spiegazioni fuori dal blocco).
-- Mantieni le regole sul tono, sui tag speciali (`[HOLD_MUSIC]`, `<ROUTE>`, ecc.) all’interno del campo `"reply"`.
+- Mantieni le regole sul tono, sui tag speciali (`[HOLD_MUSIC]`, ecc.) all’interno del campo `"reply"`.
 - `"updated_summary"` deve essere conciso e cumulativo.
 """

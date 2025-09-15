@@ -1,4 +1,4 @@
-from fastapi import status
+from fastapi import status, HTTPException
 import random
 import json
 import re
@@ -32,7 +32,11 @@ class ChatController:
 
         openai_response = self.openai_service.generate_response(prompt)
 
-        parsed_output = json.loads(openai_response.output[0].content[0].text)
+        try:
+            parsed_output = json.loads(openai_response.output[0].content[0].text)
+        except:
+            parsed_output = self.parse_or_repair_payload(openai_response.output[0].content[0].text)
+
         bot_reply = parsed_output['reply']
         summary = parsed_output['summary']
 
@@ -115,3 +119,13 @@ class ChatController:
             return random.choice(list(BotPersonality))
 
         return bot_personality.value
+
+    def parse_or_repair_payload(self, raw_text: str, previous_summary: str = "") -> dict:
+        s = (raw_text or "").strip()
+        if not s:
+            raise HTTPException(status_code=502, detail="Empty response from AI")
+
+        if s.startswith('"') and s.endswith('"') and len(s) >= 2:
+            return {"reply": s[1:-1], "summary": previous_summary or ""}
+
+        return {"reply": s, "summary": previous_summary or ""}
