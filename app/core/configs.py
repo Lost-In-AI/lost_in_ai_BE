@@ -1,7 +1,4 @@
-from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
@@ -10,7 +7,7 @@ class Settings(BaseSettings):
     MAX_TOKENS: int
 
     model_config = SettingsConfigDict(
-        env_file=ROOT / ".env",
+        env_file="../.env",
         env_file_encoding="utf-8"
     )
 
