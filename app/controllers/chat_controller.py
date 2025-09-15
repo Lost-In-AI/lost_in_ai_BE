@@ -1,7 +1,8 @@
 from fastapi import status
-from datetime import datetime
 import random
 import json
+import re
+from typing import Optional
 
 from schemas.enums.bot_personality import BotPersonality
 from schemas.enums.message_sender import MessageSender
@@ -11,12 +12,14 @@ from schemas.message import Message
 from services.openai_service import OpenAIService
 from services import prompt_builders, prompts
 from core.configs import settings
+from utils import utc_now_isoformat
 
 
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
         self.bot_init = prompts.CHATBOT_INIT
+        self.MUSIC_REGEX = r"\[HOLD_MUSIC.*?\].*?\[/HOLD_MUSIC\]"
 
     def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
         user_input_message = chat_request.current_message
@@ -33,7 +36,9 @@ class ChatController:
         bot_reply = parsed_output['reply']
         summary = parsed_output['summary']
 
+        bot_replies = self._handle_music_placeholders(bot_reply)
         bot_message = self._to_message('assistant', bot_reply)
+        bot_split_messages = [self._to_message('assistant', bot_reply) for bot_reply in bot_replies]
 
         history.append(user_message)
         history.append(bot_message)
@@ -41,17 +46,20 @@ class ChatController:
         if openai_response.usage.input_tokens + openai_response.usage.output_tokens >= settings.MAX_TOKENS:
             history.pop(0)
 
+        music = 'music' if len(bot_split_messages) > 1 else None
+
         return ChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=chat_request.session_id,
             history=history,
             summary=summary,
-            current_responses=[bot_message],
-            bot_personality=bot_personality
+            current_responses=bot_split_messages,
+            bot_personality=bot_personality,
+            break_reason=music if music else None
         )
 
     @staticmethod
-    def _to_message(role: str, message: str, timestamp: datetime = None) -> Message:
+    def _to_message(role: str, message: str, timestamp: Optional[str] = None) -> Message:
         if role == "user":
             role = MessageSender.USER
         elif role == "assistant":
@@ -62,25 +70,32 @@ class ChatController:
         return Message(
             sender=role,
             text=message,
-            timestamp=datetime.now() if not timestamp else timestamp
+            timestamp=utc_now_isoformat() if not timestamp else timestamp
         )
+
+    def _handle_music_placeholders(self, bot_reply: str):
+        return [
+            part.strip()
+            for part in re.split(self.MUSIC_REGEX, bot_reply, flags=re.DOTALL)
+            if part.strip()
+        ]
 
     def mock_response(self, chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
-            sender=MessageSender.BOT,
+            sender=MessageSender.ASSISTANT,
             text='Risposta di test... chatbot in pausa pranzo!!!',
-            timestamp=datetime.now()
+            timestamp=utc_now_isoformat()
         )
         history = [
             Message(
                 sender=MessageSender.USER,
                 text="Ciao voglio informazioni per un mutuo",
-                timestamp=datetime.now()
+                timestamp=utc_now_isoformat()
             ),
             Message(
-                sender=MessageSender.BOT,
+                sender=MessageSender.ASSISTANT,
                 text="Ciao di quali info hai bisogno",
-                timestamp=datetime.now()
+                timestamp=utc_now_isoformat()
             )
         ]
 
@@ -91,11 +106,11 @@ class ChatController:
             session_id=chat_request.session_id,
             history=history,
             summary="L'utente ha chiesto di essere messo in contatto con qualcuno.",
-            current_response=current_response
+            current_responses=[current_response]
         )
 
     @staticmethod
-    def _resolve_bot_personality(bot_personality: BotPersonality = None) -> BotPersonality:
+    def _resolve_bot_personality(bot_personality: BotPersonality = None) -> str:
         if bot_personality is None:
             return random.choice(list(BotPersonality))
 
