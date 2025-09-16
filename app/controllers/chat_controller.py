@@ -4,6 +4,7 @@ import json
 import re
 from typing import Optional
 
+from exceptions.chat_exception import BotResponseParsingError, PlaceholdersParsingError
 from schemas.enums.bot_personality import BotPersonality
 from schemas.enums.message_sender import MessageSender
 from schemas.chat_request import ChatRequest
@@ -78,13 +79,17 @@ class ChatController:
         )
 
     def _handle_music_placeholders(self, bot_reply: str):
-        return [
-            part.strip()
-            for part in re.split(self.MUSIC_REGEX, bot_reply, flags=re.DOTALL)
-            if part.strip()
-        ]
+        try:
+            return [
+                part.strip()
+                for part in re.split(self.MUSIC_REGEX, bot_reply, flags=re.DOTALL)
+                if part.strip()
+            ]
+        except Exception as e:
+            raise PlaceholdersParsingError(str(e))
 
-    def mock_response(self, chat_request: ChatRequest) -> ChatResponse:
+    @staticmethod
+    def mock_response(chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
             sender=MessageSender.ASSISTANT,
             text='Risposta di test... chatbot in pausa pranzo!!!',
@@ -120,12 +125,16 @@ class ChatController:
 
         return bot_personality.value
 
-    def parse_or_repair_payload(self, raw_text: str, previous_summary: str = "") -> dict:
-        s = (raw_text or "").strip()
-        if not s:
-            raise HTTPException(status_code=502, detail="Empty response from AI")
+    @staticmethod
+    def parse_or_repair_payload(raw_text: str, previous_summary: str = "") -> dict:
+        try:
+            s = (raw_text or "").strip()
+            if not s:
+                raise HTTPException(status_code=502, detail="Empty response from AI")
 
-        if s.startswith('"') and s.endswith('"') and len(s) >= 2:
-            return {"reply": s[1:-1], "summary": previous_summary or ""}
+            if s.startswith('"') and s.endswith('"') and len(s) >= 2:
+                return {"reply": s[1:-1], "summary": previous_summary or ""}
 
-        return {"reply": s, "summary": previous_summary or ""}
+            return {"reply": s, "summary": previous_summary or ""}
+        except Exception as e:
+            raise BotResponseParsingError(str(e))
