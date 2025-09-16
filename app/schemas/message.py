@@ -16,5 +16,4 @@ class Message(BaseModel):
     timestamp: datetime = Field(
         ...,
         description="Timestamp"
-
     )
