@@ -7,9 +7,11 @@ from typing import Optional
 from exceptions.chat_exception import BotResponseParsingError, PlaceholdersParsingError
 from schemas.enums.bot_personality import BotPersonality
 from schemas.enums.message_sender import MessageSender
-from schemas.new_chat_request import NewChatRequest
-from schemas.new_chat_response import NewChatResponse
+from schemas.chat_request import ChatRequest
+from schemas.chat_response import ChatResponse
 from schemas.message import Message
+from schemas.patch_chat_request import PatchChatRequest
+from schemas.patch_chat_response import PatchChatResponse
 from services.openai_service import OpenAIService
 from services import prompt_builders, prompts
 from core.configs import settings
@@ -22,7 +24,7 @@ class ChatController:
         self.bot_init = prompts.CHATBOT_INIT
         self.MUSIC_REGEX = r"\[HOLD_MUSIC.*?\].*?\[/HOLD_MUSIC\]"
 
-    def process_chat(self, chat_request: NewChatRequest) -> NewChatResponse:
+    def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
         user_input_message = chat_request.current_message
         user_message = self._to_message('user', user_input_message)
         bot_personality = self._resolve_bot_personality(chat_request.bot_personality)
@@ -53,7 +55,7 @@ class ChatController:
 
         music = 'music' if len(bot_split_messages) > 1 else None
 
-        return NewChatResponse(
+        return ChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=chat_request.session_id,
             history=history,
@@ -62,6 +64,14 @@ class ChatController:
             bot_personality=bot_personality,
             break_reason=music if music else None
         )
+
+    def patch_chat(self, patch_request: PatchChatRequest) -> ChatResponse:
+        return PatchChatResponse(
+            response_code=status.HTTP_200_OK,
+            session_id=patch_request.session_id,
+            bot_personality=patch_request.bot_personality
+        )
+
 
     @staticmethod
     def _to_message(role: str, message: str, timestamp: Optional[str] = None) -> Message:
@@ -89,7 +99,7 @@ class ChatController:
             raise PlaceholdersParsingError(str(e))
 
     @staticmethod
-    def mock_response(chat_request: NewChatRequest) -> NewChatResponse:
+    def mock_response(chat_request: ChatRequest) -> ChatResponse:
         current_response = Message(
             sender=MessageSender.ASSISTANT,
             text='Risposta di test... chatbot in pausa pranzo!!!',
