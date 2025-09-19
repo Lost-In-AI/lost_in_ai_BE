@@ -10,7 +10,7 @@ from schemas.patch_chat_response import PatchChatResponse
 router = APIRouter()
 
 
-@router.post('/new', response_model=ChatResponse, response_model_exclude_none=True)
+@router.post('/', response_model=ChatResponse, response_model_exclude_none=True)
 async def chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller)
                ) -> ChatResponse:
     try:
