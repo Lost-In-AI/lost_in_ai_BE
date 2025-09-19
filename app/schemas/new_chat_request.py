@@ -5,7 +5,7 @@ from schemas.enums.bot_personality import BotPersonality
 from schemas.message import Message
 
 
-class ChatRequest(BaseModel):
+class NewChatRequest(BaseModel):
     session_id: str = Field(
         ...,
         description="Unique identifier for the chat session"

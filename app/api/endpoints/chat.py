@@ -2,16 +2,16 @@ from fastapi import APIRouter, Depends
 
 from api.depends import get_chat_controller
 from controllers.chat_controller import ChatController
-from schemas.chat_request import ChatRequest
-from schemas.chat_response import ChatResponse
+from schemas.new_chat_request import NewChatRequest
+from schemas.new_chat_response import NewChatResponse
 
 
 router = APIRouter()
 
 
-@router.post('/', response_model=ChatResponse, response_model_exclude_none=True)
-async def chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller)
-                    ) -> ChatResponse:
+@router.post('/new', response_model=NewChatResponse, response_model_exclude_none=True)
+async def chat(request: NewChatRequest, chat_controller: ChatController = Depends(get_chat_controller)
+               ) -> NewChatResponse:
     try:
         return chat_controller.process_chat(request)
     except Exception as e:

@@ -6,7 +6,7 @@ from schemas.enums.break_reason import BreakReason
 from schemas.message import Message
 
 
-class ChatResponse(BaseModel):
+class NewChatResponse(BaseModel):
     response_code: int = Field(
         ...,
         ge=100,
