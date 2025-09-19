@@ -21,7 +21,7 @@ from utils import utc_now_isoformat
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
-        self.bot_init = prompts.CHATBOT_INIT
+        self.bot_init = prompts.CHATBOT_INIT_WITTY
         self.MUSIC_REGEX = r"\[HOLD_MUSIC.*?\].*?\[/HOLD_MUSIC\]"
 
     def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
