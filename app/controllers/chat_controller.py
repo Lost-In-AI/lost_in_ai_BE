@@ -120,7 +120,7 @@ class ChatController:
 
         history.append(current_response)
 
-        return NewChatResponse(
+        return ChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=chat_request.session_id,
             history=history,
