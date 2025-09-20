@@ -17,10 +17,6 @@ from services import prompt_builders, prompts
 from core.configs import settings
 from utils import utc_now_isoformat
 
-
-
-
-
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
@@ -68,7 +64,7 @@ class ChatController:
             break_reason=music if music else None
         )
 
-    def patch_chat(self, patch_request: PatchChatRequest) -> ChatResponse:
+    def patch_chat(self, patch_request: PatchChatRequest) -> PatchChatResponse:
         return PatchChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=patch_request.session_id,
@@ -142,10 +138,8 @@ class ChatController:
     def personality_to_prompt(bot_personality: BotPersonality) -> str:
         if bot_personality == BotPersonality.WITTY:
             return prompts.CHATBOT_INIT_WITTY
-        elif bot_personality == BotPersonality.INEPT:
-            return prompts.CHATBOT_INIT_INEPT
         else:
-            return prompts.CHATBOT_INIT_WITTY
+            return prompts.CHATBOT_INIT_INEPT
             
 
     @staticmethod
