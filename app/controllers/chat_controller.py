@@ -17,11 +17,9 @@ from services import prompt_builders, prompts
 from core.configs import settings
 from utils import utc_now_isoformat
 
-
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
         self.openai_service = openai_service
-        self.bot_init = prompts.CHATBOT_INIT
         self.MUSIC_REGEX = r"\[HOLD_MUSIC.*?\].*?\[/HOLD_MUSIC\]"
 
     def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
@@ -31,7 +29,8 @@ class ChatController:
 
         summary = chat_request.summary if chat_request.summary else ""
         history = chat_request.history if chat_request.history else []
-        prompt = prompt_builders.prepare_prompt(self.bot_init, user_input_message, history, summary)
+        init_prompt = self.personality_to_prompt(bot_personality)
+        prompt = prompt_builders.prepare_prompt(init_prompt, user_input_message, history, summary)
 
         openai_response = self.openai_service.generate_response(prompt)
 
@@ -65,7 +64,7 @@ class ChatController:
             break_reason=music if music else None
         )
 
-    def patch_chat(self, patch_request: PatchChatRequest) -> ChatResponse:
+    def patch_chat(self, patch_request: PatchChatRequest) -> PatchChatResponse:
         return PatchChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=patch_request.session_id,
@@ -129,11 +128,19 @@ class ChatController:
         )
 
     @staticmethod
-    def _resolve_bot_personality(bot_personality: BotPersonality = None) -> str:
+    def _resolve_bot_personality(bot_personality: BotPersonality= None) -> str:
         if bot_personality is None:
             return random.choice(list(BotPersonality))
 
         return bot_personality.value
+    
+    @staticmethod
+    def personality_to_prompt(bot_personality: BotPersonality) -> str:
+        if bot_personality == BotPersonality.WITTY:
+            return prompts.CHATBOT_INIT_WITTY
+        else:
+            return prompts.CHATBOT_INIT_INEPT
+            
 
     @staticmethod
     def parse_or_repair_payload(raw_text: str, previous_summary: str = "") -> dict:
