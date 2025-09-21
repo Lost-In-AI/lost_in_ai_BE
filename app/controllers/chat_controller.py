@@ -43,8 +43,8 @@ class ChatController:
         summary = parsed_output['summary']
 
         bot_replies = self._handle_music_placeholders(bot_reply)
-        bot_message = self._to_message('assistant', bot_reply)
-        bot_split_messages = [self._to_message('assistant', bot_reply) for bot_reply in bot_replies]
+        bot_message = self._to_message(role='assistant', message=bot_reply, personality=bot_personality)
+        bot_split_messages = [self._to_message(role='assistant', message=bot_reply, personality=bot_personality) for bot_reply in bot_replies]
 
         history.append(user_message)
         history.append(bot_message)
@@ -73,18 +73,21 @@ class ChatController:
 
 
     @staticmethod
-    def _to_message(role: str, message: str, timestamp: Optional[str] = None) -> Message:
+    def _to_message(role: str, message: str, personality: BotPersonality = None, timestamp: Optional[str] = None) -> Message:
+        bot_personality = None
         if role == "user":
             role = MessageSender.USER
         elif role == "assistant":
             role = MessageSender.ASSISTANT
+            bot_personality = personality if personality else None
         else:
             role = MessageSender.SYSTEM
 
         return Message(
             sender=role,
             text=message,
-            timestamp=utc_now_isoformat() if not timestamp else timestamp
+            timestamp=utc_now_isoformat() if not timestamp else timestamp,
+            bot_personality=bot_personality
         )
 
     def _handle_music_placeholders(self, bot_reply: str):
