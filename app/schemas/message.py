@@ -13,9 +13,8 @@ class Message(BaseModel):
 
     )
     bot_personality: Optional[BotPersonality] = Field(
-        ...,
-        description="Indicates who sent the message ('user' or 'bot')"
-
+        description="Indicates who sent the message ('user' or 'bot')",
+        default=None
     )
     text: str = Field(
         ...,
