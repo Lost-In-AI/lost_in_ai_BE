@@ -3,10 +3,11 @@ from typing import Optional
 
 from schemas.enums.bot_personality import BotPersonality
 from schemas.message import Message
+from uuid import UUID
 
 
 class ChatRequest(BaseModel):
-    session_id: Optional[str] = Field(
+    session_id: Optional[UUID] = Field(
         ...,
         description="Unique identifier for the chat session"
     )
