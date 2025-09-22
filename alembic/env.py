@@ -5,12 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from dotenv import load_dotenv
-from pathlib import Path
 import os
 
-BASE_DIR = Path(__file__).resolve().parents[1]
-load_dotenv(BASE_DIR / ".env")
+
 connection_url=os.getenv("DATABASE_URL")
 if not connection_url:
     raise RuntimeError("DATABASE_URL non trovato")
