@@ -58,7 +58,7 @@ class ChatController:
 
         return ChatResponse(
             response_code=status.HTTP_200_OK,
-            session_id=chat_request.session_id,
+            session_id=str(session_id),
             history=history,
             summary=summary,
             current_responses=bot_split_messages,
