@@ -16,6 +16,7 @@ from services.openai_service import OpenAIService
 from services import prompt_builders, prompts
 from core.configs import settings
 from utils import utc_now_isoformat
+from uuid import uuid4
 
 class ChatController:
     def __init__(self, openai_service: OpenAIService):
@@ -27,6 +28,7 @@ class ChatController:
         user_message = self._to_message('user', user_input_message)
         bot_personality = self._resolve_bot_personality(chat_request.bot_personality)
 
+        session_id = chat_request.session_id if chat_request.session_id else uuid4()
         summary = chat_request.summary if chat_request.summary else ""
         history = chat_request.history if chat_request.history else []
         init_prompt = self.personality_to_prompt(bot_personality)
