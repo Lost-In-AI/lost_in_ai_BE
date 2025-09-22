@@ -1,6 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
     APP_NAME: str = "Lost In AI"
     OPENAI_API_KEY: str
@@ -12,6 +11,5 @@ class Settings(BaseSettings):
         env_file="../.env",
         env_file_encoding="utf-8"
     )
-
 
 settings = Settings()
