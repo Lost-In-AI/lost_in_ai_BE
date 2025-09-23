@@ -12,4 +12,3 @@ __pycache__/
 # --- Virtual env ---
 venv/
 .env
-lost_in_ai_BE/.env
