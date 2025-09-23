@@ -3,6 +3,7 @@ import random
 import json
 import re
 from typing import Optional
+from uuid import uuid4
 
 from exceptions.chat_exception import BotResponseParsingError, PlaceholdersParsingError
 from schemas.enums.bot_personality import BotPersonality
@@ -16,7 +17,7 @@ from services.openai_service import OpenAIService
 from services import prompt_builders, prompts
 from core.configs import settings
 from utils import utc_now_isoformat
-from uuid import uuid4
+
 
 class ChatController:
     def __init__(self, openai_service: OpenAIService):

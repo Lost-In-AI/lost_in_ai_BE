@@ -8,8 +8,8 @@ from uuid import UUID
 
 class ChatRequest(BaseModel):
     session_id: Optional[UUID] = Field(
-        ...,
-        description="Unique identifier for the chat session"
+        description="Unique identifier for the chat session",
+        default=None
     )
     current_message: str = Field(
         ...,

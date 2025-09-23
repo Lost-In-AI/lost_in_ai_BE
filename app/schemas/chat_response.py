@@ -4,7 +4,6 @@ from typing import Optional
 from schemas.enums.bot_personality import BotPersonality
 from schemas.enums.break_reason import BreakReason
 from schemas.message import Message
-from controllers.chat_controller import ChatController
 
 
 class ChatResponse(BaseModel):
