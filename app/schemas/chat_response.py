@@ -48,7 +48,7 @@ class ChatResponse(BaseModel):
             "examples": [
                 {
                     "response_code": 200,
-                    "session_id": "12345ABC",
+                    "session_id": "b8962d03-ef87-452a-b54f-08d1f5c686a4",
                     "current_responses": [
                         {
                             "sender": "bot",

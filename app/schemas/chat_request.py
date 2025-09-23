@@ -33,11 +33,11 @@ class ChatRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "session_id": "12345ABC",
+                    "session_id": "b8962d03-ef87-452a-b54f-08d1f5c686a4",
                     "current_message": "La casa cost 100k ed è grande 100 metri quadri. Mi potete concedere il mutuo?"
                 },
                 {
-                    "session_id": "12345ABC",
+                    "session_id": "b8962d03-ef87-452a-b54f-08d1f5c686a4",
                     "current_message": "Ciao voglio informazioni per un mutuo",
                     "history": [
                         {
