@@ -4,9 +4,6 @@ from sqlmodel import create_engine
 from core.configs import settings
 
 engine = create_engine(settings.DATABASE_URL, echo=settings.DATABASE_ECHO)
-
-def get_engine():
-    return engine
   
 
 def test_connection():

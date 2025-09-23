@@ -1,8 +1,15 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from jwt import InvalidTokenError
+from sqlmodel import Session
+from typing import Generator
+
 
 from controllers.chat_controller import ChatController
+from controllers.user_controller import UserController
+from controllers.webhook_controller import WebhookController
+from repositories.user_repository import UserRepository
+from services.database import engine
 from services.openai_service import OpenAIService
 
 from services.clerk_service import ClerkToken, http_bearer, ClerkService
@@ -41,3 +48,22 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_be
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Accesso negato: {e}")
+
+
+def get_db() -> Generator[Session, None, None]:
+    with Session(engine) as db:
+        yield db
+
+
+def get_user_repository(db: Session) -> UserRepository:
+    return UserRepository(db)
+
+
+def get_user_controller(db: Session = Depends(get_db)) -> UserController:
+    user_repository: UserRepository = get_user_repository(db)
+    return UserController(user_repository)
+
+
+def get_webhook_controller(db: Session = Depends(get_db)) -> WebhookController:
+    user_controller = get_user_controller(db)
+    return WebhookController(user_controller)
