@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Optional
-
-from schemas.enums.message_sender import MessageSender
 from sqlalchemy import text
 from sqlmodel import Field, SQLModel
+
+from schemas.enums.message_sender import MessageSender
 
 
 class Message(SQLModel, table=True):
