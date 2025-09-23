@@ -2,7 +2,10 @@ alembic==1.16.5
 annotated-types==0.7.0
 anyio==4.10.0
 certifi==2025.8.3
+cffi==2.0.0
+clerk-backend-api==3.3.1
 click==8.2.1
+cryptography==45.0.7
 distro==1.9.0
 dnspython==2.7.0
 email-validator==2.3.0
@@ -26,11 +29,13 @@ mdurl==0.1.2
 openai==1.107.0
 psycopg2-binary==2.9.10
 pycodestyle==2.14.0
+pycparser==2.23
 pydantic==2.11.7
 pydantic-settings==2.10.1
 pydantic_core==2.33.2
 pyflakes==3.4.0
 Pygments==2.19.2
+PyJWT==2.10.1
 python-dotenv==1.1.1
 python-multipart==0.0.20
 PyYAML==6.0.2
