@@ -1,10 +1,13 @@
 import os
 from logging.config import fileConfig
-
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from dotenv import load_dotenv
 
-connection_url = os.getenv("DATABASE_URL")
+load_dotenv(dotenv_path=".env")
+
+
+connection_url = os.getenv('DATABASE_URL')
 if not connection_url:
     raise RuntimeError("DATABASE_URL non trovato")
 
