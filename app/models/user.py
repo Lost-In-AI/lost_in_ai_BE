@@ -19,7 +19,6 @@ class User(SQLModel, table=True):
     email: str = Field(...)
     name: str = Field(...)
     surname: str = Field(...)
-    date_of_birth: date = Field(...)
     created_at: Optional[datetime] = Field(
         ..., sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")}
     )
