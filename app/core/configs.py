@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     MAX_TOKENS: int
     DATABASE_URL: str
     DATABASE_ECHO: bool
+    CLERK_JWKS_URL: str
+    CLERK_ISSUER: str
 
     model_config = SettingsConfigDict(
         env_file="../.env",
