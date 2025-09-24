@@ -10,8 +10,8 @@ class UserController:
         user = User(
             id=event_payload.get('id'),
             email=event_payload.get('email_addresses')[0]['email_address'],
-            name=event_payload.get('unsafe_metadata')['first_name'],
-            surname=event_payload.get('unsafe_metadata')['last_name'],
+            name=event_payload.get('unsafe_metadata')['firstName'],
+            surname=event_payload.get('unsafe_metadata')['LastName'],
         )
 
         self.user_repository.create_user(user)
