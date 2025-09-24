@@ -9,10 +9,9 @@ class UserController:
     def create_user(self, event_payload: dict):
         user = User(
             id=event_payload.get('id'),
-            username=event_payload.get('username'),
             email=event_payload.get('email_addresses')[0]['email_address'],
-            name=event_payload.get('first_name'),
-            surname=event_payload.get('last_name')
+            name=event_payload.get('unsafe_metadata')['first_name'],
+            surname=event_payload.get('unsafe_metadata')['last_name'],
         )
 
         self.user_repository.create_user(user)
