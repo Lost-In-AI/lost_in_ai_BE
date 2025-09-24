@@ -10,7 +10,6 @@ from sqlmodel import Field, SQLModel
 class User(SQLModel, table=True):
     __tablename__ = "users"
     __table_args__ = (
-        UniqueConstraint("username", name="uq_users_username"),
         UniqueConstraint("email", name="uq_users_email"),
     )
 
