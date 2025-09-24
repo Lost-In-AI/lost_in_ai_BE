@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DATABASE_ECHO: bool
     CLERK_JWKS_URL: str
     CLERK_ISSUER: str
+    CLERK_WEBHOOK_SECRET: str
 
     model_config = SettingsConfigDict(
         env_file="../.env",
