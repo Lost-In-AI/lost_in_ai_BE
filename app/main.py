@@ -7,6 +7,24 @@ from api.webhook import router as webhook
 from core.configs import settings
 from exceptions.exceptions_handler import register_exception_handlers
 
+description = """
+# Lost in AI
+
+Lost in AI simulates a phone customer service experience with the most frustrating elements: hold music, continuous transfers, and AI operators (via OpenAI) that never seem to understand the problem. All designed to be technically brilliant but deliberately useless, demonstrating skills in conversational AI, development, deploy and UX design.
+
+While all chatbots try to be helpful, ours must be memorably useless but in a sophisticated and entertaining way.
+
+## Tech Stack
+
+* **Framework**: FastAPI 0.116.1
+* **Runtime**: Python 3.12+
+* **Database**: PostgreSQL con SQLAlchemy 2.0
+* **Migrazioni**: Alembic 1.16.5
+* **Autenticazione**: Clerk Backend API
+* **AI Integration**: OpenAI GPT API
+* **Deployment**: Vercel
+
+"""
 
 app = FastAPI(
     title=settings.APP_NAME
