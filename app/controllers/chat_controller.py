@@ -40,11 +40,9 @@ class ChatController:
         try:
             user_input_message = chat_request.current_message
             summary = chat_request.summary if chat_request.summary else ""
-            session_id = str(chat_request.session_id) if str(chat_request.session_id) else str(uuid4())
+            session_id = chat_request.session_id if chat_request.session_id else str(uuid4())
 
-            bot_personality = self._resolve_bot_personality(chat_request.bot_personality)
-            init_prompt = self.personality_to_prompt(bot_personality)
-
+            session = self.chat_repository.get_session(session_id)
             if token:
                 user_id = token.sub
                 user = self.user_repository.get_user_by_id(user_id)
@@ -54,12 +52,18 @@ class ChatController:
                         message="User not found"
                     )
 
-                if str(chat_request.session_id) and str(chat_request.session_id) != session_id:
-                    session = self.chat_repository.create_session(Session(user_id=user.id, session_id=session_id))
+            user_id = user.id if user else None
 
-            else:
-                if str(chat_request.session_id) and str(chat_request.session_id) != session_id:
-                    session = self.chat_repository.create_session(Session(session_id=session_id))
+            if not session:
+                session = self.chat_repository.create_session(Session(session_id=session_id, user_id=user_id))
+
+            history = self.chat_repository.get_session_messages(session_id)
+            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at) for message in history]
+
+            # bot_personality = self._resolve_bot_personality(chat_request.bot_personality)
+            # TODO da recuperae lo storico... e recuperare l'ultima personalità
+            bot_personality = random.choice(list(BotPersonality))
+            init_prompt = self.personality_to_prompt(bot_personality)
 
             new_message = self.chat_repository.create_message(
                 Message(
@@ -69,9 +73,6 @@ class ChatController:
                     created_at=utc_now_isoformat()
                 )
             )
-
-            history = self.chat_repository.get_session_messages(session_id)
-            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at) for message in history]
 
             prompt = prompt_builders.prepare_prompt(init_prompt, user_input_message, history_message, summary)
 
@@ -214,12 +215,12 @@ class ChatController:
             current_responses=[current_response]
         )
 
-    @staticmethod
-    def _resolve_bot_personality(bot_personality: BotPersonality= None) -> str:
+    '''@staticmethod
+    def _resolve_bot_personality() -> str:
         if bot_personality is None:
             return random.choice(list(BotPersonality))
 
-        return bot_personality.value
+        return bot_personality.value'''
     
     @staticmethod
     def personality_to_prompt(bot_personality: BotPersonality) -> str:

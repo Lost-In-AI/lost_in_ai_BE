@@ -34,3 +34,12 @@ class ChatRepository:
             return self.db.exec(statement).all()
         except Exception as e:
             raise Exception(f"Error getting messages for session_id {session_id}. Error: {e}")
+
+
+    def get_session(self, session_id: str):
+        try:
+            statement = select(SessionModel).where(SessionModel.session_id == session_id)
+            return self.db.exec(statement).all()
+        except Exception as e:
+            raise e
+

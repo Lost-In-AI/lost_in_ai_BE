@@ -8,5 +8,5 @@ class Session(SQLModel, table=True):
     __tablename__ = "sessions"
 
     id: int = Field(primary_key=True)
-    session_id: UUID = Field(nullable=False, unique=True, index=True)
+    session_id: str = Field(nullable=False, unique=True, index=True)
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")

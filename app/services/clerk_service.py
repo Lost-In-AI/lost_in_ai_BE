@@ -21,7 +21,7 @@ class ClerkService:
         self.client = PyJWKClient(self.jwks_url)
 
 
-    def verify_and_decode_token(self, token: str) -> Dict[str, Any]:
+    def verify_and_decode_token(self, token: str = None) -> Dict[str, Any]:
         try:
             signing_key = self.client.get_signing_key_from_jwt(token)
         except Exception as e:
