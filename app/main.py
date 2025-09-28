@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
 from api.api_router import router
-from api.webhook import router as webhook
 from core.configs import settings
 from exceptions.exceptions_handler import register_exception_handlers
 
@@ -49,7 +48,6 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix='/api')
-app.include_router(webhook, prefix='/webhook')
 register_exception_handlers(app)
 
 
