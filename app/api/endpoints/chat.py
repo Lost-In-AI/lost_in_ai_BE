@@ -15,9 +15,8 @@ router = APIRouter()
              description=(
                  "Process a new chat request. "
                  "Takes user input, forwards it to the chat controller, and returns the AI's response."
-             )
-)
-async def chat(request, chat_controller: ChatController = Depends(get_chat_controller),
+             ))
+async def chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller),
                ) -> ChatResponse:
     try:
         response = chat_controller.process_chat(request)

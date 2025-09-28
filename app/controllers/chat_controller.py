@@ -59,7 +59,7 @@ class ChatController:
         ]
 
 
-    def process_chat(self, chat_request) -> ChatResponse:
+    def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
         try:
             session_id = chat_request.session_id if chat_request.session_id else str(uuid4())
             session_id = str(session_id)
