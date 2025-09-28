@@ -24,3 +24,7 @@ class Message(BaseModel):
         ...,
         description="Timestamp"
     )
+    session_id: str = Field(
+        ...,
+        description="Session ID"
+    )
