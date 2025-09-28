@@ -146,6 +146,34 @@ class ChatController:
             bot_personality=bot_personality
         )
 
+    def get_messages(self, session_id: str = None, token = None):
+        try:
+            session_id = self._normalize_session_id(session_id)
+
+            self.handle_db_session(session_id, token)
+
+            history = self.chat_repository.get_session_messages(session_id)
+            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message,
+                                                personality=message.bot_personality, timestamp=message.created_at)
+                               for message in history]
+
+            return ChatResponse(
+                response_code=status.HTTP_200_OK,
+                session_id=str(session_id),
+                history=history_message,
+                current_responses=[MessageSchema(
+                    sender='assistant',
+                    bot_personality=self._resolve_bot_personality(),
+                    text='Ciao, come posso aiutarti oggi?',
+                    timestamp=utc_now_isoformat(),
+                    session_id=session_id
+                )]
+            )
+
+        except Exception as e:
+            raise PlaceholdersParsingError(str(e))
+
+
     def _handle_music_placeholders(self, bot_reply: str):
         try:
             return [
@@ -214,3 +242,20 @@ class ChatController:
             return {"reply": s, "summary": previous_summary or ""}
         except Exception as e:
             raise BotResponseParsingError(str(e))
+
+    @staticmethod
+    def _normalize_session_id(session_id: str = None) -> str:
+        return session_id if session_id else str(uuid4())
+
+    def handle_db_session(self, session_id: str, token = None) -> Session:
+        if not token:
+            return self.chat_repository.create_session(Session(session_id=session_id))
+
+        user_id = token.sub
+        user = self.user_repository.get_user_by_id(user_id)
+        if not user:
+            return ChatResponse(
+                response_code=status.HTTP_404_NOT_FOUND,
+                message="User not found"
+            )
+        return self.chat_repository.create_session(Session(user_id=user.id, session_id=session_id))

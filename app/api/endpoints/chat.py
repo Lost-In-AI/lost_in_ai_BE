@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from typing import Optional
 
 from api.depends import get_chat_controller, get_current_user
 from controllers.chat_controller import ChatController
@@ -9,6 +10,15 @@ from schemas.patch_chat_response import PatchChatResponse
 from services.clerk_service import ClerkToken
 
 router = APIRouter()
+
+
+@router.get('/', response_model=ChatResponse, response_model_exclude_none=True)
+async def chat(chat_controller: ChatController = Depends(get_chat_controller), session_id: Optional[str] = Query(None),
+               token: ClerkToken = Depends(get_current_user)):
+    try:
+        return chat_controller.get_messages(session_id, token)
+    except Exception as e:
+        raise e
 
 
 @router.post('/', response_model=ChatResponse, response_model_exclude_none=True)

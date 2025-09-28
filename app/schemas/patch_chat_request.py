@@ -14,10 +14,7 @@ class PatchChatRequest(BaseModel):
         default=None,
         description="Optional list of the most recent N messages in the conversation"
     )
-    bot_personality: Optional[BotPersonality] = Field(
-        default=BotPersonality.WITTY,
-        description="The bot's personality"
-    )
+
 
     model_config = {
         "json_schema_extra": {
@@ -40,8 +37,7 @@ class PatchChatRequest(BaseModel):
                         "text": "Ciao voglio informazioni per un mutuo",
                         "timestamp": "2025-09-05T15:02:00Z",
                     }
-                ],
-                "chat_personality": "witty"
+                ]
             }
         }
     }

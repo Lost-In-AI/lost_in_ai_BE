@@ -2,8 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID
 
-from schemas.enums.bot_personality import BotPersonality
-
 
 class ChatRequest(BaseModel):
     session_id: Optional[UUID] = Field(
@@ -19,10 +17,7 @@ class ChatRequest(BaseModel):
         default=None,
         description="Optional condensed summary of the conversation, used to preserve context and reduce token usage"
     )
-    bot_personality: Optional[BotPersonality] = Field(
-        default=BotPersonality.WITTY,
-        description="The bot's personality"
-    )
+
 
     model_config = {
         "json_schema_extra": {
@@ -34,7 +29,6 @@ class ChatRequest(BaseModel):
                 {
                     "session_id": "b8962d03-ef87-452a-b54f-08d1f5c686a4",
                     "current_message": "Ciao voglio informazioni per un mutuo",
-                    "chat_personality": "witty"
                 },
             ]
         }

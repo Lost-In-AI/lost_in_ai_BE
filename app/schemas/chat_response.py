@@ -38,10 +38,7 @@ class ChatResponse(BaseModel):
         default=None,
         description="Optional response message"
     )
-    bot_personality: Optional[BotPersonality] = Field(
-        default=BotPersonality.WITTY,
-        description="The bot's personality"
-    )
+
 
     model_config = {
         "json_schema_extra": {
@@ -79,8 +76,7 @@ class ChatResponse(BaseModel):
                                     "stato energetico e soprattutto quanti soldi vuoi da noi!!",
                             "timestamp": "2025-09-05T15:07:00Z"
                         }
-                    ],
-                    "bot_personality": 'witty'
+                    ]
                 }
             ]
         }
