@@ -6,7 +6,7 @@ from uuid import UUID
 class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(
         description="Unique identifier for the chat session",
-        default=None
+        default=''
     )
     current_message: str = Field(
         ...,
