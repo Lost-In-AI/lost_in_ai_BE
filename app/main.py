@@ -42,6 +42,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "https://lost-in-ai-fe.vercel.app",
         "https://lost-in-ai-fe.vercel.app/",
+        "https://lost-in-ai-fe-ivory.vercel.app/",
         "https://lost-in-ai-fe-git-feat-db-logic-74-lara-filippones-projects.vercel.app/",
         "https://7a39fe5f8410.ngrok-free.app"
     ],
