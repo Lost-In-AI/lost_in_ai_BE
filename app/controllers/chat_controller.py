@@ -120,6 +120,7 @@ class ChatController:
             message=random.choice(self.switch_first_response),
             personality=current_bot_personality
         )
+        self.chat_repository.create_message(switch_request)
 
         bot_response = self._to_message(
             session_id=session_id,
@@ -127,6 +128,8 @@ class ChatController:
             message=random.choice(self.switch_second_response),
             personality=bot_personality
         )
+        self.chat_repository.create_message(bot_response)
+
 
         return ChatResponse(
             response_code=status.HTTP_200_OK,
