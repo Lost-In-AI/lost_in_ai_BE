@@ -42,6 +42,21 @@ class ChatController:
             r"\bparlare con un umano\b",
             r"\bumano\b", r"\boperatore\b", r"\bagente\b"
         ]
+        self.switch_first_response = [
+            "Capisco che preferisci non continuare con me, ti metto subito in contatto con un altro operatore.",
+            "Va bene, rispetto la tua scelta. Ti passo a un collega che potrà aiutarti.",
+            "Nessun problema, ti trasferisco subito a un nuovo operatore.",
+            "Capisco, non ti preoccupare. Ti metto in comunicazione con un altro operatore.",
+            "Ti ringrazio comunque per il tempo, ora ti passo a un collega che continuerà ad assisterti.",
+            "Va bene, interrompo qui e ti passo subito a un altro operatore."
+        ]
+        self.switch_second_response = [
+            "Buongiorno, sono il nuovo operatore. Come posso aiutarti oggi?",
+            "Ciao. Sono qui per assisterti, di cosa hai bisogno?",
+            "Salve, sono il nuovo operatore che seguirà la tua richiesta. Come posso esserti utile?",
+            "Buongiorno, prendo in carico ora la conversazione. Qual è la tua esigenza?",
+            "Ciao, sono il nuovo operatore. Dimmi pure come posso supportarti."
+        ]
 
 
     def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
@@ -102,14 +117,14 @@ class ChatController:
         switch_request = self._to_message(
             session_id=session_id,
             role='assistant',
-            message=f"Mi dispiace che non vuoi continuare la conversazione con me... Ti passo al nuovo operatore.",
+            message=random.choice(self.switch_first_response),
             personality=current_bot_personality
         )
 
         bot_response = self._to_message(
             session_id=session_id,
             role='assistant',
-            message=f"Buongiorno, sono il nuovo operatore, di cosa hai bisogno?",
+            message=random.choice(self.switch_second_response),
             personality=bot_personality
         )
 
