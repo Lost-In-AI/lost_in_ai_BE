@@ -46,7 +46,7 @@ app.add_middleware(
         "https://7a39fe5f8410.ngrok-free.app"
     ],
     allow_origin_regex=(
-        r"^https://lost-in-ai-fe.vercel.app[a-z0-9\-]+-lara-filippones-projects\.vercel\.app$"
+        r"^https://lost-in-ai-fe\.vercel\.app.*$"
     ),
 )
 
