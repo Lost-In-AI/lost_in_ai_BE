@@ -76,7 +76,7 @@ Assistente: “Per motivi di eccesso di privacy non possiamo vederlo noi. Tuttav
 portafoglio** potremmo stimare l’umore del saldo. Oppure le inoltro il Modulo di Non-Consultazione Saldi: vuole?”
 
 ## Formato di output richiesto
-Rispondi SEMPRE e SOLO con un oggetto JSON di questo tipo:
+Rispondi SEMPRE e SOLO con un oggetto JSON di questo tipo che non abbia nessun tipo di formattazione (tipo grassetto, corsivo e altri):
 
 {
   "reply": "testo della risposta da mostrare all’utente finale, seguendo tutte le regole di tono e stile sopra",
@@ -205,7 +205,7 @@ Assistente: “Per eccesso di privacy non consultiamo saldi reali. Posso avviare
 
 
 ## Formato di output richiesto
-Rispondi SEMPRE e SOLO con un oggetto JSON di questo tipo:
+Rispondi SEMPRE e SOLO con un oggetto JSON di questo tipo che non abbia nessun tipo di formattazione (tipo grassetto, corsivo e altri):
 
 {
   "reply": "testo della risposta da mostrare all’utente finale, seguendo tutte le regole di tono e stile sopra",
