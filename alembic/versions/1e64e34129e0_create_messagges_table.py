@@ -18,27 +18,25 @@ down_revision: Union[str, Sequence[str], None] = '441df839693d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-message_sender_enum = postgresql.ENUM("user", "assistant", "system", name="message_sender")
 
 
 def upgrade() -> None:
     """Upgrade schema."""
-    bind = op.get_bind()
-    message_sender_enum.create(bind, checkfirst=True)
 
     op.create_table(
         "messages",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("session_id", sa.Integer(), nullable=False),
-        sa.Column("sender", postgresql.ENUM(name="message_sender", create_type=False), nullable=False),
+        sa.Column("session_id", sa.String(255), nullable=False),
+        sa.Column("sender",sa.Enum('user', 'assistant', 'system', name='message_sender_enum'), nullable=False),
+
+        sa.Column("bot_personality", sa.String(255), nullable=True),
+
         sa.Column("message", sa.Text(), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=False), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.ForeignKeyConstraint(["session_id"], ["sessions.id"], name="fk_messages_session_id_sessions", ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["session_id"], ["sessions.session_id"], name="fk_messages_session_id_sessions", ondelete="CASCADE"),
     )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("messages")
-    bind = op.get_bind()
-    message_sender_enum.drop(bind, checkfirst=True)

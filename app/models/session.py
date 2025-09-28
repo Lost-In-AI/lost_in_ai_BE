@@ -1,16 +1,12 @@
 from uuid import UUID
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
+from typing import Optional
 
 
 class Session(SQLModel, table=True):
     __tablename__ = "sessions"
-    __table_args__ = (
-        UniqueConstraint(
-            "session_id", "user_id", name="uq_sessions_session_id_user_id"
-        ),
-    )
 
-    id: int = Field(..., primary_key=True)
-    session_id: UUID = Field(..., unique=True)
-    user_id: int = Field(..., foreign_key="users.id")
+    id: int = Field(primary_key=True)
+    session_id: UUID = Field(nullable=False, unique=True, index=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id")

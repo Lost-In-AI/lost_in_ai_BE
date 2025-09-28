@@ -23,13 +23,12 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("user_id", sa.String(255), nullable=False, unique=True),
         sa.Column("username", sa.String(50), nullable=False),
         sa.Column("email", sa.String(100), nullable=False),
         sa.Column("name", sa.String(50), nullable=False),
         sa.Column("surname", sa.String(50), nullable=False),
-        sa.Column("date_of_birth", sa.Date(), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=False), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.UniqueConstraint("username", name="uq_users_username"),
         sa.UniqueConstraint("email", name="uq_users_email"),
     )
 
