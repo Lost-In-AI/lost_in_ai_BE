@@ -1,0 +1,265 @@
+Lost in AI - Backend Setup Documentation
+
+Documento preparato da Team Lost in AI per il Back to School Camp AI 2025 (TomorrowDevs)
+
+=== PANORAMICA PROGETTO ===
+
+Architettura:
+- Framework: FastAPI 0.116.1
+- Runtime: Python 3.12+
+- Database: PostgreSQL con SQLAlchemy 2.0
+- Migrazioni: Alembic 1.16.5
+- Autenticazione: Clerk Backend API
+- AI Integration: OpenAI GPT API
+- Deployment: Vercel
+
+=== ARCHITETTURA DETTAGLIATA ===
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │───▶│   FastAPI       │───▶│   PostgreSQL    │
+│   (React/Vite)  │    │   Backend       │    │   Database      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ├── OpenAI API (GPT)
+                              ├── Clerk Auth Service  
+                              ├── Vercel Deployment
+                              └── Webhook Handlers
+
+Flusso Richiesta:
+Client → CORS → FastAPI Router → Controller → Service → Repository → DB
+       ↑                                     ↓
+       └── Response ← DTO Schema ← Business Logic
+
+=== PATTERN ARCHITETTURALI ===
+
+Struttura Clean Architecture:
+app/
+├── api/              # Layer di presentazione (endpoints)
+├── controllers/      # Business logic coordinators
+├── services/         # Domain services (OpenAI, Database, Auth)
+├── repositories/     # Data access layer
+├── models/          # Database entities (SQLModel)
+├── schemas/         # Data transfer objects (Pydantic)
+├── core/            # Configuration e utilities
+└── exceptions/      # Custom exception handling
+
+Pattern Implementati:
+- Repository Pattern: Astrazione data access
+- Controller Pattern: Coordinamento business logic
+- Service Layer: Domain services
+- Dependency Injection: FastAPI Depends per IoC
+- DTO Pattern: Pydantic schemas per data transfer
+
+=== REQUISITI SISTEMA ===
+
+Prerequisiti Obbligatori:
+- Python 3.12+          Verifica: python --version
+- pip 24.0+             Verifica: pip --version  
+- PostgreSQL 14.0+      Verifica: psql --version
+- Git 2.30+             Verifica: git --version
+
+Setup Multi-Piattaforma:
+
+Windows (PowerShell):
+winget install Python.Python.3.12
+winget install PostgreSQL.PostgreSQL
+python --version
+psql --version
+
+macOS (Terminal):
+brew install python@3.12 postgresql
+brew services start postgresql
+
+Linux (Ubuntu/Debian):
+sudo apt update && sudo apt upgrade
+sudo apt install python3.12 python3.12-venv python3.12-dev postgresql postgresql-contrib build-essential libpq-dev
+sudo systemctl start postgresql
+
+=== INSTALLAZIONE ===
+
+1. Clone Repository:
+git clone [repository-url]
+cd lost-in-ai/lost_in_ai_BE
+
+2. Virtual Environment:
+python3.12 -m venv venv
+
+Attivazione:
+Windows: venv\Scripts\activate
+macOS/Linux: source venv/bin/activate
+
+3. Installazione Dipendenze:
+pip install --upgrade pip
+pip install -r requirements.txt
+
+4. Database Setup:
+sudo -u postgres createdb lost_in_ai_db
+alembic upgrade head
+
+=== CONFIGURAZIONE ===
+
+Variabili d'Ambiente:
+Crea file .env nella directory lost_in_ai_BE/:
+
+# APPLICATION
+APP_NAME="Lost In AI"
+
+# DATABASE
+DATABASE_URL=postgresql://username:password@localhost:5432/dbname
+DATABASE_ECHO=true
+
+# OPENAI
+OPENAI_API_KEY=sk-proj-...
+MAX_TOKENS=4000
+
+# CLERK AUTHENTICATION
+CLERK_JWKS_URL=https://your-domain.clerk.accounts.dev/.well-known/jwks.json
+CLERK_ISSUER=https://your-domain.clerk.accounts.dev
+CLERK_WEBHOOK_SECRET=whsec_...
+
+=== SCHEMA DATABASE ===
+Obiettivo: tracciare utenti (Clerk), sessioni di chat e messaggi
+
+Diagramma relazionale:
+┌───────────┐        1      *        ┌────────────┐        1      *        ┌───────────┐
+│  users    │ ─────────────────────▶ │  sessions  │ ─────────────────────▶ │ messages  │
+└───────────┘                        └────────────┘                        └───────────┘
+                users.id  ── FK ──  sessions.user_id
+                sessions.id ── FK ─ messages.session_id
+
+Enum: message_sender: "user" | "assistant" | "system"
+
+Tabelle:
+- users (id, username, email, name, surname, date_of_birth, created_at)
+- sessions (id, session_id, user_id)
+- messages (id, session_id, sender, message, created_at)
+
+Le migrazioni Alembic gestiscono automaticamente:
+- users: Gestione utenti con integrazione Clerk
+- sessions: Sessioni di chat  
+- messages: Messaggi conversazione con metadata
+
+=== AVVIO APPLICAZIONE ===
+
+Server Development:
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+Oppure:
+python app/main.py
+
+URLs Disponibili:
+- API Docs: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- API Base: http://localhost:8000/api
+- Webhooks: http://localhost:8000/webhook
+
+Configurazione CORS:
+Il server accetta richieste da:
+- http://localhost:3000 (React dev)
+- http://localhost:5173 (Vite dev)
+- https://lost-in-ai-fe.vercel.app (Production)
+
+=== DIPENDENZE PRINCIPALI ===
+
+Core Framework:
+- fastapi==0.116.1 - Web framework
+- uvicorn==0.35.0 - ASGI server
+- pydantic==2.11.7 - Data validation
+- starlette==0.47.3 - Base framework
+
+Database Stack:
+- sqlalchemy==2.0.43 - ORM core
+- sqlmodel==0.0.25 - FastAPI integration
+- alembic==1.16.5 - Database migrations
+- psycopg2-binary==2.9.10 - PostgreSQL driver
+
+External Services:
+- openai==1.107.0 - AI integration
+- clerk-backend-api==3.3.1 - Authentication
+- httpx==0.28.1 - HTTP client
+- svix==1.76.1 - Webhook verification
+
+Development Tools:
+- flake8==7.3.0 - Code linting
+- python-dotenv==1.1.1 - Environment variables
+- pydantic-settings==2.10.1 - Settings management
+
+Note Speciali:
+uvloop==0.21.0 è disabilitato su Windows per compatibilità (riga 65 requirements.txt)
+
+=== COMANDI UTILI ===
+
+Database Management:
+alembic upgrade head           # Applica tutte le migrazioni
+alembic current               # Stato attuale
+alembic history               # Cronologia migrazioni
+alembic revision --autogenerate -m "description"  # Nuova migrazione
+psql lost_in_ai_db           # Connetti al database
+pg_dump lost_in_ai_db > backup.sql  # Backup
+
+Development:
+flake8 app                   # Linting
+python app/main.py           # Avvio diretto
+pip freeze > requirements.txt  # Aggiorna requirements
+
+Makefile (se disponibile):
+make venv                    # Crea virtual environment
+make install                 # Installa dipendenze
+make style                   # Code linting
+make install-pkg pkg=nome    # Installa nuovo pacchetto
+
+=== TROUBLESHOOTING ===
+
+Problemi Comuni:
+- ModuleNotFoundError psycopg2: sudo apt install libpq-dev python3-dev
+- Database connection failed: sudo systemctl status postgresql
+- Port 8000 in use: uvicorn app.main:app --port 8001
+- uvloop error Windows: Normale, è disabilitato automaticamente
+- Clerk webhook errors: Verifica CLERK_WEBHOOK_SECRET in .env
+- OpenAI API errors: Controlla OPENAI_API_KEY e billing account
+
+Reset Database:
+dropdb lost_in_ai_db
+createdb lost_in_ai_db
+alembic upgrade head
+
+=== CHECKLIST SETUP ===
+
+Prerequisiti:
+□ Python 3.12+ installato
+□ PostgreSQL installato e avviato
+□ Git configurato
+□ Repository clonato
+
+Installazione:
+□ Virtual environment creato e attivato
+□ pip aggiornato
+□ Dipendenze installate (pip install -r requirements.txt)
+
+Configurazione:
+□ Database creato (createdb lost_in_ai_db)
+□ File .env configurato con tutte le variabili
+□ Chiavi API ottenute e configurate
+□ Migrazioni applicate (alembic upgrade head)
+
+Verifica:
+□ Server avviato (uvicorn app.main:app --reload)
+□ API docs accessibili (http://localhost:8000/docs)
+□ Database connection verificata
+□ Linting passato (flake8 app)
+
+=== TEAM LOST IN AI ===
+Tutti i membri del team hanno collaborato attivamente su più aspetti del progetto come backend, frontend, AI integration, design e documentazione.
+- Lara
+- Carlo
+- Donato   
+- Federico 
+- Emy 
+- Virginia
+
+=== NOTE ===
+
+Questa documentazione copre il setup completo del backend Lost in AI con focus su installazione, configurazione e architettura di base. Per dettagli su endpoints specifici e flussi applicativi, consultare le rispettive sezioni della documentazione.
+
+Per problemi non coperti dal troubleshooting, consultare la documentazione ufficiale di FastAPI, SQLAlchemy e Alembic.
+
