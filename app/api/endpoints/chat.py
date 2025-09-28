@@ -11,7 +11,15 @@ from services.clerk_service import ClerkToken
 router = APIRouter()
 
 
-@router.post('/', response_model=ChatResponse, response_model_exclude_none=True)
+@router.post('/',
+             response_model=ChatResponse,
+             response_model_exclude_none=True,
+             summary="Start a new chat",
+             description=(
+                 "Process a new chat request. "
+                 "Takes user input, forwards it to the chat controller, and returns the AI's response."
+             )
+)
 async def chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller),
                token: ClerkToken = Depends(get_current_user)) -> ChatResponse:
     try:
@@ -23,7 +31,15 @@ async def chat(request: ChatRequest, chat_controller: ChatController = Depends(g
         raise e
 
 
-@router.patch('/', response_model=PatchChatResponse, response_model_exclude_none=True)
+@router.patch('/',
+              response_model=PatchChatResponse,
+              response_model_exclude_none=True,
+              summary="Update an ongoing chat",
+              description=(
+                  "Update an existing chat session with new input."
+                  "Allows modifying or extending a previous chat context."
+              )
+)
 async def chat(request: PatchChatRequest, chat_controller: ChatController = Depends(get_chat_controller)):
     try:
         return chat_controller.patch_chat(request)
