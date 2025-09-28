@@ -40,12 +40,13 @@ class ChatController:
         try:
             session_id = chat_request.session_id if chat_request.session_id else str(uuid4())
             session_id = str(session_id)
+            self.handle_session(session_id)
 
             user_input_message = self.handle_user_message(chat_request, session_id)
 
             summary = chat_request.summary if chat_request.summary else ""
 
-            self.handle_session(session_id)
+
 
             history_model = self.chat_repository.get_session_messages(session_id)
 
@@ -125,7 +126,7 @@ class ChatController:
         session_model = self.chat_repository.get_session(session_id)
 
         if not session_model:
-            new_session_model = self.chat_repository.create_session(Session(handle_session=session_id))
+            new_session_model = self.chat_repository.create_session(Session(session_id=session_id))
 
     def handle_user_message(self, chat_request: ChatRequest, session_id: str) -> str:
         user_input_message = chat_request.current_message
