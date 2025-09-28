@@ -8,7 +8,15 @@ from schemas.chat_response import ChatResponse
 router = APIRouter()
 
 
-@router.post('/', response_model=ChatResponse, response_model_exclude_none=True)
+@router.post('/',
+             response_model=ChatResponse,
+             response_model_exclude_none=True,
+             summary="Start a new chat",
+             description=(
+                 "Process a new chat request. "
+                 "Takes user input, forwards it to the chat controller, and returns the AI's response."
+             )
+)
 async def chat(request: ChatRequest, chat_controller: ChatController = Depends(get_chat_controller),
                ) -> ChatResponse:
     try:
