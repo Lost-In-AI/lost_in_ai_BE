@@ -1,13 +1,16 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
+
+from models.user import User
 
 
 class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_user(self, user):
+
+    def get_user_by_id(self, user_id = str):
         try:
-            self.db.add(user)
-            self.db.commit()
+            statement = select(User).where(User.user_id == user_id)
+            return self.db.exec(statement).one_or_none()
         except Exception as e:
-            raise e
+            raise Exception(f"Error getting user by user_id {user_id}. Error: {e}")
