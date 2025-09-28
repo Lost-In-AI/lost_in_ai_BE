@@ -4,6 +4,7 @@ import json
 import re
 from typing import Optional
 from uuid import uuid4
+import unicodedata
 
 from core.configs import settings
 from utils import utc_now_isoformat
@@ -18,10 +19,7 @@ from schemas.enums.message_sender import MessageSender
 from schemas.message import Message as MessageSchema
 from schemas.chat_request import ChatRequest
 from schemas.chat_response import ChatResponse
-from schemas.patch_chat_request import PatchChatRequest
-from schemas.patch_chat_response import PatchChatResponse
 
-from services.clerk_service import ClerkToken
 from services.openai_service import OpenAIService
 from services import prompt_builders, prompts
 
@@ -35,6 +33,16 @@ class ChatController:
         self.user_repository = user_repository
         self.chat_repository = chat_repository
         self.MUSIC_REGEX = r"\[HOLD_MUSIC.*?\].*?\[/HOLD_MUSIC\]"
+        self._SWITCH_PATTERNS = [
+            r"\bcambia( re)? (operatore|assistente|bot)\b",
+            r"\bcambia (modalita|personalita)\b",
+            r"\bpassami (un|una)? (operatore|agente|persona|umano)\b",
+            r"\b(parla|parlare|metti(mi)?) in contatto con (un|una)? (umano|persona|operatore|agente)\b",
+            r"\bvorrei parlare con (un|una)? (umano|persona|operatore|agente)\b",
+            r"\bparlare con un umano\b",
+            r"\bumano\b", r"\boperatore\b", r"\bagente\b"
+        ]
+
 
     def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
         try:
@@ -46,17 +54,22 @@ class ChatController:
 
             summary = chat_request.summary if chat_request.summary else ""
 
-
-
             history_model = self.chat_repository.get_session_messages(session_id)
 
-            bot_personality = self.handle_bot_personality(history_model)
+            current_bot_personality = self.handle_bot_personality(history_model)
 
-            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at) for message in history_model]
+            switch_request = None
+            bot_personality = None
+            if self.wants_switch(user_input_message):
+                return self.handle_switch_request(current_bot_personality, session_id)
 
-            prompt = self.handle_prompt(bot_personality, history_message, summary, user_input_message)
+            history_message = [self._to_message(
+                session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at)
+                for message in history_model]
 
-            user_message = self._to_message(session_id=session_id, role='user', message=user_input_message)
+            prompt = self.handle_prompt(current_bot_personality, history_message, summary, user_input_message)
+
+            self._to_message(session_id=session_id, role='user', message=user_input_message)
             openai_response = self.openai_service.generate_response(prompt)
 
             try:
@@ -64,26 +77,48 @@ class ChatController:
             except:
                 parsed_output = self.parse_or_repair_payload(openai_response.output[0].content[0].text)
 
-            bot_message, bot_split_messages = self.handle_bot_response(bot_personality, parsed_output, session_id)
+            bot_message, bot_split_messages = self.handle_bot_response(bot_personality if switch_request else current_bot_personality, parsed_output, session_id)
 
-            history_message.append(user_message)
-            history_message.append(bot_message)
+            splitted_message = None
+            if switch_request:
+                splitted_message = [switch_request] + bot_split_messages
 
             if openai_response.usage.input_tokens + openai_response.usage.output_tokens >= settings.MAX_TOKENS:
                 history_message.pop(0)
 
-
             return ChatResponse(
                 response_code=status.HTTP_200_OK,
                 session_id=session_id,
-                history=history_message,
                 summary=parsed_output['summary'],
-                current_responses=bot_split_messages,
-                bot_personality=bot_personality,
+                current_responses=splitted_message if splitted_message else bot_split_messages,
                 break_reason='music' if len(bot_split_messages) > 1 else None
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+
+    def handle_switch_request(self, current_bot_personality, session_id: str) -> ChatResponse:
+        bot_personality = self.flip_personality(current_bot_personality)
+        switch_request = self._to_message(
+            session_id=session_id,
+            role='assistant',
+            message=f"Mi dispiace che non vuoi continuare la conversazione con me... Ti passo al nuovo operatore.",
+            personality=current_bot_personality
+        )
+
+        bot_response = self._to_message(
+            session_id=session_id,
+            role='assistant',
+            message=f"Buongiorno, sono il nuovo operatore, di cosa hai bisogno?",
+            personality=bot_personality
+        )
+
+        return ChatResponse(
+            response_code=status.HTTP_200_OK,
+            session_id=session_id,
+            current_responses=[switch_request, bot_response],
+            break_reason='music'
+        )
 
     def handle_bot_response(self, bot_personality, parsed_output, session_id: str) -> tuple[
         Message, list[Message]]:
@@ -140,13 +175,6 @@ class ChatController:
         )
         return user_input_message
 
-    def patch_chat(self, patch_request: PatchChatRequest) -> PatchChatResponse:
-        return PatchChatResponse(
-            response_code=status.HTTP_200_OK,
-            session_id=patch_request.session_id,
-            bot_personality=patch_request.bot_personality
-        )
-
 
     @staticmethod
     def _to_message(session_id: str, role: str, message: str, personality: BotPersonality = None, timestamp: Optional[str] = None) -> MessageSchema:
@@ -166,33 +194,6 @@ class ChatController:
             timestamp=utc_now_isoformat() if not timestamp else timestamp,
             bot_personality=bot_personality
         )
-
-    def get_messages(self, session_id: str = None, token = None):
-        try:
-            session_id = self._normalize_session_id(session_id)
-
-            self.handle_db_session(session_id, token)
-
-            history = self.chat_repository.get_session_messages(session_id)
-            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message,
-                                                personality=message.bot_personality, timestamp=message.created_at)
-                               for message in history]
-
-            return ChatResponse(
-                response_code=status.HTTP_200_OK,
-                session_id=str(session_id),
-                history=history_message,
-                current_responses=[MessageSchema(
-                    sender='assistant',
-                    bot_personality=self._resolve_bot_personality(),
-                    text='Ciao, come posso aiutarti oggi?',
-                    timestamp=utc_now_isoformat(),
-                    session_id=session_id
-                )]
-            )
-
-        except Exception as e:
-            raise PlaceholdersParsingError(str(e))
 
 
     def _handle_music_placeholders(self, bot_reply: str):
@@ -234,6 +235,7 @@ class ChatController:
             summary="L'utente ha chiesto di essere messo in contatto con qualcuno.",
             current_responses=[current_response]
         )
+
 
     @staticmethod
     def _resolve_bot_personality(bot_personality: str = None) -> str:
@@ -280,3 +282,14 @@ class ChatController:
                 message="User not found"
             )
         return self.chat_repository.create_session(Session(user_id=user.id, session_id=session_id))
+
+
+    def wants_switch(self, user_text: str) -> bool:
+        text = unicodedata.normalize("NFKD", user_text).encode("ascii", "ignore").decode("ascii").lower().strip()
+        return any(re.search(word, text) for word in self._SWITCH_PATTERNS)
+
+
+    def flip_personality(self, current: Optional[BotPersonality]) -> BotPersonality:
+        if current is None:
+            return random.choice(list(BotPersonality))
+        return BotPersonality.INEPT if current == BotPersonality.WITTY else BotPersonality.WITTY

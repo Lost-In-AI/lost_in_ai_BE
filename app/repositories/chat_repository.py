@@ -42,4 +42,3 @@ class ChatRepository:
             return self.db.exec(statement).all()
         except Exception as e:
             raise e
-

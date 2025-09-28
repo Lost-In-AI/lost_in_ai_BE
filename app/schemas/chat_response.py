@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from schemas.enums.bot_personality import BotPersonality
 from schemas.enums.break_reason import BreakReason
 from schemas.message import Message
 
@@ -21,10 +20,6 @@ class ChatResponse(BaseModel):
         ...,
         description="The chatbot reply, split into multiple messages if the AI output contains pauses. "
                     "The frontend can insert musical interludes between parts."
-    )
-    history: Optional[list[Message]] = Field(
-        default=None,
-        description="Optional list of the most recent N messages in the conversation"
     )
     summary: Optional[str] = Field(
         default=None,
@@ -54,29 +49,6 @@ class ChatResponse(BaseModel):
                         }
                     ],
                     "summary": "L'utente ha chiesto di essere messo in contatto con qualcuno.",
-                    "history": [
-                        {
-                            "sender": "user",
-                            "text": "Ciao voglio informazioni per un mutuo",
-                            "timestamp": "2025-09-05T15:02:00Z",
-                        },
-                        {
-                            "sender": "bot",
-                            "text": "Ciao di quali info hai bisogno?",
-                            "timestamp": "2025-09-05T15:03:00Z",
-                        },
-                        {
-                            "sender": "user",
-                            "text": "Voglio aprire un mutuo per acquistare una casa",
-                            "timestamp": "2025-09-05T15:06:00Z",
-                        },
-                        {
-                            "sender": "bot",
-                            "text": "Puoi darmi altre info sulla casa? Come il prezzo di vendita, la metratura, lo "
-                                    "stato energetico e soprattutto quanti soldi vuoi da noi!!",
-                            "timestamp": "2025-09-05T15:07:00Z"
-                        }
-                    ]
                 }
             ]
         }
