@@ -35,7 +35,10 @@ def upgrade():
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('session_id', sa.String, nullable=False),
         sa.Column('sender', msg_sender_enum, nullable=False),
+        sa.Column('bot_personality', sa.String(100)),
         sa.Column('message', sa.Text, nullable=False),
+        sa.Column("created_at", sa.TIMESTAMP(timezone=False), nullable=False,
+                  server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.ForeignKeyConstraint(
             ['session_id'], ['sessions.session_id'],
             name='fk_messages_session_id_sessions', ondelete='CASCADE'
