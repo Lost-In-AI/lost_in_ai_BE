@@ -28,7 +28,7 @@ While all chatbots try to be helpful, ours must be memorably useless but in a so
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description=description
+    description=description,
 )
 
 app.add_middleware(
