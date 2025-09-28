@@ -14,17 +14,21 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://lost-in-ai-fe.vercel.app",
-        "https://lost-in-ai-fe-git-feat-db-logic-74-lara-filippones-projects.vercel.app/"
+        "https://lost-in-ai-fe-git-feat-db-logic-74-lara-filippones-projects.vercel.app/",
+        "https://7a39fe5f8410.ngrok-free.app"
     ],
-    allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*']
+    allow_origin_regex=(
+        r"^https://lost-in-ai-fe-git-[a-z0-9\-]+-lara-filippones-projects\.vercel\.app$"
+    ),
 )
 
 app.include_router(router, prefix='/api')

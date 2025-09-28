@@ -38,33 +38,10 @@ class ChatController:
 
     def process_chat(self, chat_request: ChatRequest, token: ClerkToken = None) -> ChatResponse:
         try:
-            user_input_message = chat_request.current_message
-            summary = chat_request.summary if chat_request.summary else ""
             session_id = chat_request.session_id if chat_request.session_id else str(uuid4())
+            session_id = str(session_id)
 
-            session = self.chat_repository.get_session(session_id)
-            if token:
-                user_id = token.sub
-                user = self.user_repository.get_user_by_id(user_id)
-                if not user:
-                    return ChatResponse(
-                        response_code=status.HTTP_404_NOT_FOUND,
-                        message="User not found"
-                    )
-
-            user_id = user.id if user else None
-
-            if not session:
-                session = self.chat_repository.create_session(Session(session_id=session_id, user_id=user_id))
-
-            history = self.chat_repository.get_session_messages(session_id)
-            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at) for message in history]
-
-            # bot_personality = self._resolve_bot_personality(chat_request.bot_personality)
-            # TODO da recuperae lo storico... e recuperare l'ultima personalità
-            bot_personality = random.choice(list(BotPersonality))
-            init_prompt = self.personality_to_prompt(bot_personality)
-
+            user_input_message = chat_request.current_message
             new_message = self.chat_repository.create_message(
                 Message(
                     session_id=session_id,
@@ -73,6 +50,29 @@ class ChatController:
                     created_at=utc_now_isoformat()
                 )
             )
+
+            summary = chat_request.summary if chat_request.summary else ""
+
+            session_model = self.chat_repository.get_session(session_id)
+
+            if not session_model:
+                new_session_model = self.chat_repository.create_session(Session(session_id=session_id))
+
+            history_model = self.chat_repository.get_session_messages(session_id)
+
+            bot_personality = next(
+                (message.bot_personality for message in reversed(history_model) if message.sender == "assistant"),
+                None
+            )
+
+            if not bot_personality:
+                bot_personality = self._resolve_bot_personality()
+
+            history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at) for message in history_model]
+
+            init_prompt = self.personality_to_prompt(bot_personality)
+
+
 
             prompt = prompt_builders.prepare_prompt(init_prompt, user_input_message, history_message, summary)
 
@@ -96,6 +96,7 @@ class ChatController:
                     session_id=session_id,
                     sender=message.sender,
                     message=message.text,
+                    bot_personality=message.bot_personality,
                     created_at=utc_now_isoformat()
                 )
                 self.chat_repository.create_message(message_model)
@@ -110,7 +111,7 @@ class ChatController:
 
             return ChatResponse(
                 response_code=status.HTTP_200_OK,
-                session_id=str(session_id),
+                session_id=session_id,
                 history=history_message,
                 summary=summary,
                 current_responses=bot_split_messages,
@@ -215,12 +216,12 @@ class ChatController:
             current_responses=[current_response]
         )
 
-    '''@staticmethod
-    def _resolve_bot_personality() -> str:
+    @staticmethod
+    def _resolve_bot_personality(bot_personality: str = None) -> str:
         if bot_personality is None:
             return random.choice(list(BotPersonality))
 
-        return bot_personality.value'''
+        return bot_personality.value
     
     @staticmethod
     def personality_to_prompt(bot_personality: BotPersonality) -> str:

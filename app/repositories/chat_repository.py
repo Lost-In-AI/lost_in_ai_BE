@@ -22,7 +22,7 @@ class ChatRepository:
     def create_message(self, message: Message) -> Message:
         try:
             self.db.add(message)
-            self.db.flush()
+            self.db.commit()
             self.db.refresh(message)
             return message
         except Exception as e:
