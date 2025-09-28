@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 from core.configs import settings
 
 
-http_bearer = HTTPBearer(auto_error=False)
+http_bearer = HTTPBearer(auto_error=True)
 
 class ClerkToken(BaseModel):
     sub: str
