@@ -36,45 +36,24 @@ class ChatController:
         self.chat_repository = chat_repository
         self.MUSIC_REGEX = r"\[HOLD_MUSIC.*?\].*?\[/HOLD_MUSIC\]"
 
-    def process_chat(self, chat_request: ChatRequest, token: ClerkToken = None) -> ChatResponse:
+    def process_chat(self, chat_request: ChatRequest) -> ChatResponse:
         try:
             session_id = chat_request.session_id if chat_request.session_id else str(uuid4())
             session_id = str(session_id)
 
-            user_input_message = chat_request.current_message
-            new_message = self.chat_repository.create_message(
-                Message(
-                    session_id=session_id,
-                    sender=MessageSender.USER.value,
-                    message=user_input_message,
-                    created_at=utc_now_isoformat()
-                )
-            )
+            user_input_message = self.handle_user_message(chat_request, session_id)
 
             summary = chat_request.summary if chat_request.summary else ""
 
-            session_model = self.chat_repository.get_session(session_id)
-
-            if not session_model:
-                new_session_model = self.chat_repository.create_session(Session(session_id=session_id))
+            self.handle_session(session_id)
 
             history_model = self.chat_repository.get_session_messages(session_id)
 
-            bot_personality = next(
-                (message.bot_personality for message in reversed(history_model) if message.sender == "assistant"),
-                None
-            )
-
-            if not bot_personality:
-                bot_personality = self._resolve_bot_personality()
+            bot_personality = self.handle_bot_personality(history_model)
 
             history_message = [self._to_message(session_id=session_id, role=message.sender, message=message.message, personality=message.bot_personality, timestamp=message.created_at) for message in history_model]
 
-            init_prompt = self.personality_to_prompt(bot_personality)
-
-
-
-            prompt = prompt_builders.prepare_prompt(init_prompt, user_input_message, history_message, summary)
+            prompt = self.handle_prompt(bot_personality, history_message, summary, user_input_message)
 
             user_message = self._to_message(session_id=session_id, role='user', message=user_input_message)
             openai_response = self.openai_service.generate_response(prompt)
@@ -84,22 +63,7 @@ class ChatController:
             except:
                 parsed_output = self.parse_or_repair_payload(openai_response.output[0].content[0].text)
 
-            bot_reply = parsed_output['reply']
-            summary = parsed_output['summary']
-
-            bot_replies = self._handle_music_placeholders(bot_reply)
-            bot_message = self._to_message(session_id=session_id, role='assistant', message=bot_reply, personality=bot_personality)
-            bot_split_messages = [self._to_message(session_id=session_id, role='assistant', message=bot_reply, personality=bot_personality) for bot_reply in bot_replies]
-
-            for message in bot_split_messages:
-                message_model = Message(
-                    session_id=session_id,
-                    sender=message.sender,
-                    message=message.text,
-                    bot_personality=message.bot_personality,
-                    created_at=utc_now_isoformat()
-                )
-                self.chat_repository.create_message(message_model)
+            bot_message, bot_split_messages = self.handle_bot_response(bot_personality, parsed_output, session_id)
 
             history_message.append(user_message)
             history_message.append(bot_message)
@@ -107,19 +71,73 @@ class ChatController:
             if openai_response.usage.input_tokens + openai_response.usage.output_tokens >= settings.MAX_TOKENS:
                 history_message.pop(0)
 
-            music = 'music' if len(bot_split_messages) > 1 else None
 
             return ChatResponse(
                 response_code=status.HTTP_200_OK,
                 session_id=session_id,
                 history=history_message,
-                summary=summary,
+                summary=parsed_output['summary'],
                 current_responses=bot_split_messages,
                 bot_personality=bot_personality,
-                break_reason=music if music else None
+                break_reason='music' if len(bot_split_messages) > 1 else None
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+    def handle_bot_response(self, bot_personality, parsed_output, session_id: str) -> tuple[
+        Message, list[Message]]:
+        bot_reply = parsed_output['reply']
+        bot_replies = self._handle_music_placeholders(parsed_output['reply'])
+        bot_message = self._to_message(session_id=session_id, role='assistant', message=bot_reply,
+                                       personality=bot_personality)
+        bot_split_messages = [
+            self._to_message(session_id=session_id, role='assistant', message=bot_reply, personality=bot_personality)
+            for bot_reply in bot_replies]
+
+        for message in bot_split_messages:
+            message_model = Message(
+                session_id=session_id,
+                sender=message.sender,
+                message=message.text,
+                bot_personality=message.bot_personality,
+                created_at=utc_now_isoformat()
+            )
+            self.chat_repository.create_message(message_model)
+        return bot_message, bot_split_messages
+
+    def handle_prompt(self, bot_personality, history_message: list[Message], summary: str, user_input_message: str) -> list[
+        dict]:
+        init_prompt = self.personality_to_prompt(bot_personality)
+        prompt = prompt_builders.prepare_prompt(init_prompt, user_input_message, history_message, summary)
+        return prompt
+
+    def handle_bot_personality(self, history_model):
+        bot_personality = next(
+            (message.bot_personality for message in reversed(history_model) if message.sender == "assistant"),
+            None
+        )
+
+        if not bot_personality:
+            bot_personality = self._resolve_bot_personality()
+        return bot_personality
+
+    def handle_session(self, session_id: str):
+        session_model = self.chat_repository.get_session(session_id)
+
+        if not session_model:
+            new_session_model = self.chat_repository.create_session(Session(handle_session=session_id))
+
+    def handle_user_message(self, chat_request: ChatRequest, session_id: str) -> str:
+        user_input_message = chat_request.current_message
+        new_message = self.chat_repository.create_message(
+            Message(
+                session_id=session_id,
+                sender=MessageSender.USER.value,
+                message=user_input_message,
+                created_at=utc_now_isoformat()
+            )
+        )
+        return user_input_message
 
     def patch_chat(self, patch_request: PatchChatRequest) -> PatchChatResponse:
         return PatchChatResponse(
