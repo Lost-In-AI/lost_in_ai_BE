@@ -114,27 +114,44 @@ class ChatController:
 
     def handle_switch_request(self, current_bot_personality, session_id: str) -> ChatResponse:
         bot_personality = self.flip_personality(current_bot_personality)
-        switch_request = self._to_message(
+
+        switch_request = Message(
+            session_id=session_id,
+            sender='assistant',
+            message=random.choice(self.switch_first_response),
+            bot_personality=current_bot_personality,
+            created_at=utc_now_isoformat()
+        )
+        self.chat_repository.create_message(switch_request)
+
+        bot_response = Message(
+            session_id=session_id,
+            sender='assistant',
+            message=random.choice(self.switch_second_response),
+            bot_personality=bot_personality,
+            created_at=utc_now_isoformat()
+        )
+        self.chat_repository.create_message(bot_response)
+
+
+        switch_request_schema = self._to_message(
             session_id=session_id,
             role='assistant',
             message=random.choice(self.switch_first_response),
             personality=current_bot_personality
         )
-        self.chat_repository.create_message(switch_request)
 
-        bot_response = self._to_message(
+        bot_response_schema = self._to_message(
             session_id=session_id,
             role='assistant',
             message=random.choice(self.switch_second_response),
             personality=bot_personality
         )
-        self.chat_repository.create_message(bot_response)
-
 
         return ChatResponse(
             response_code=status.HTTP_200_OK,
             session_id=session_id,
-            current_responses=[switch_request, bot_response],
+            current_responses=[switch_request_schema, bot_response_schema],
             break_reason='music'
         )
 
